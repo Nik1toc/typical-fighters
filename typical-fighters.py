@@ -7,11 +7,11 @@
 import random
 
 class Character:
-    def __init__(self, name, health, knock_out):
+    def __init__(self, name, health):
         self.name = name
         self.health = health
 
-  # @property
+    @property
     def is_alive(self):
         return self.health > 0
 
@@ -36,70 +36,54 @@ class Monster(Character):
             self.health = health
     
     def info(self):                              #Information stuff---------
-        if self.is_alive():
+        if self.is_alive:
             print(self.name)
             print(f'Class: {self.clasif}')
-            print(f'Weapon: {self.weapon}, damage {self.damage} ')
+            print(f'Weapon: {self.weapon}, damage {self.damage}')
             if self.name == 'Goblin King':
                 print(f'Special move: Stomp {self.stomp} DMG')
-            print(f'HP: {self.health}')     
-    
-    def attack_gk(self, enemy, stomp_check):
-        if self.is_alive() and enemy.is_alive():
-            if stomp_check:
-                if isinstance(enemy, Hero) and not isinstance(enemy, Mage):
-                    self.stomp -= enemy.defense
-                    self.stomp = 0 if self.stomp < 0 else self.stomp
-                enemy.health -= self.stomp
-            else:
-                if isinstance(enemy, Hero) and not isinstance(enemy, Mage):
-                    self.damage -= enemy.defense
-                    self.damage = 0 if self.damage < 0 else self.damage
-                enemy.health -= self.damage
-            if enemy.health < 0:
-                enemy.health = 0
-            if stomp_check:
-                print(f'{self.name} has stomped on {enemy.__class__.__name__} {enemy.name}')
-                if self.stomp == self.stomp_sec:
-                    print(f'{enemy.name} HP reduced to {enemy.health}\n')
-                elif self.stomp != self.stomp_sec and self.stomp != 0 and self.stomp > 0:
-                    print(f'{enemy.name} HP reduced to {enemy.health} [{enemy.defense} Blocked]\n')                     
-                else:  
-                    print(f'{self.name} did no damage [Fully Blocked]\n')
-            else:
-                print(f'{self.name} has attacked {enemy.__class__.__name__} {enemy.name} with {self.weapon}')
-                if self.damage == self.damage_sec:
-                    print(f'{enemy.name} HP reduced to {enemy.health}\n')
-                elif self.damage != self.damage_sec and self.damage != 0 and self.damage > 0:
-                    print(f'{enemy.name} HP reduced to {enemy.health} [{enemy.defense} Blocked]\n') 
-                else:
-                    print(f'{self.name} did no damage [Fully Blocked]\n')
-            print(f'{enemy.name} HP: {enemy.health}\n')
-            self.stomp = self.stomp_sec
-            self.damage = self.damage_sec
-            if enemy.health <= 0:
-                enemy.lose()    
-    
-    def attack_g(self, enemy):
-        if self.is_alive() and  enemy.is_alive():
-            if isinstance(enemy, Hero) and not isinstance(enemy, Mage):
-                self.damage -= enemy.defense
-                self.damage = 0 if self.damage < 0 else self.damage
-            enemy.health -= self.damage
-            if enemy.health < 0:
-                enemy.health = 0
-            print(f'Monster {self.name} has attacked {enemy.__class__.__name__} {enemy.name} with {self.weapon}')
-            if self.damage == self.damage_sec:
-                print(f'{enemy.name} HP reduced to {enemy.health}\n')
-            elif self.damage < self.damage_sec and self.damage != 0 and self.damage > 0:
-                print(f'{enemy.name} HP reduced to {enemy.health} [{enemy.defense} Blocked]\n')                
-            else:
-                print(f'{self.name} did no damage [Fully Blocked]\n')
-            print(f'{enemy.name} HP: {enemy.health}\n')
-            self.damage = self.damage_sec
-            if enemy.health <= 0:
-                enemy.lose()
+            print(f'HP: {self.health}')
 
+    def attack_gk(self, enemy: Character, stomp_check: bool) -> None:
+        '''Monster attacks with a stomp or a regular attack'''
+        if not self.is_alive or not enemy.is_alive:
+            return
+        if stomp_check:
+            self._attack_stomp(enemy)
+        else:
+            self._attack_regular(enemy)
+
+    def attack_g(self, enemy: Character) -> None:
+        '''Monster attacks with a regular attack'''
+        if not self.is_alive or not enemy.is_alive:
+            return
+
+        self._attack_regular(enemy)
+
+    def _attack_regular(self, enemy: Character) -> None:
+        '''Monster attacks with a regular attack'''
+        damage_dealt = max(0, self.damage - enemy.defense)
+        enemy.health -= damage_dealt
+        self._print_attack_info(enemy, damage_dealt)
+
+    def _attack_stomp(self, enemy: Character) -> None:
+        '''Monster attacks with a stomp'''
+        stomp_damage = max(0, self.stomp - enemy.defense)
+        enemy.health -= stomp_damage
+        self._print_attack_info(enemy, stomp_damage)   
+    
+    def _print_attack_info(self, enemy: Character, damage_dealt: int) -> None:
+        '''Prints information about the attack'''
+        print(f'{self.name} has attacked {enemy.__class__.__name__} {enemy.name} with {self.weapon}')
+        if damage_dealt == self.damage_sec or (damage_dealt < self.damage_sec and damage_dealt != 0):
+            print(f'{enemy.name} HP reduced to {enemy.health}\n')
+        else:
+            print(f'{self.name} did no damage [Fully Blocked]\n')
+
+        print(f'{enemy.name} HP: {enemy.health}\n')
+        if enemy.health <= 0:
+            enemy.lose()
+            
 
 class Hero(Character):
     '''Main characer'''
@@ -118,7 +102,7 @@ class Hero(Character):
             self.health = health
 
     def info(self):                              #Information stuff---------
-        if self.is_alive() and self.health > 0:
+        if self.is_alive and self.health > 0:
             print(self.name)
             print(f'Class: {self.clasif}')
             print(f'Weapon: {self.weapon}, damage {self.damage} ')
@@ -127,14 +111,14 @@ class Hero(Character):
             self.defense /= 2                                                     #Doing for defense [Monster.attack]
 
     def regen(self):
-        if self.is_alive():
+        if self.is_alive:
             self.health += self.regain
             self.health = 100 if self.health >= 100 else self.health
             print(f'Hero {self.name} used health potion')
             print(f'HP increased to {self.health}!')
         
     def attack(self, monst):
-        if self.is_alive() and monst.is_alive():
+        if self.is_alive and monst.is_alive:
             monst.health -= self.damage
             if monst.health < 0:
                 monst.health = 0
@@ -165,7 +149,7 @@ class Mage(Hero):
                 }
 
     def info(self):                               #Information stuff---------
-        if self.is_alive():
+        if self.is_alive:
             print(self.name)
             print(f'Class: {self.clasif}')
             print(f'Weapon: {self.weapon}')
@@ -176,7 +160,7 @@ class Mage(Hero):
             print(f'HP: {self.health}')
 
     def attack_spell(self, monst, spell_type):
-        if self.is_alive() and monst.is_alive():
+        if self.is_alive and monst.is_alive:
             monst.health -= self.spell_types.get(spell_type)                          #Senior useful tricks
             if monst.health < 0:
                 monst.health = 0
@@ -239,30 +223,30 @@ mage.info()
 print('---------------')
 
 def move_gk(stomp_inmove):
-    if gking.is_alive():                           
-        if hero.is_alive():
+    if gking.is_alive:                           
+        if hero.is_alive:
             gking.attack_gk(hero, stomp_inmove)
-        elif mage.is_alive():
+        elif mage.is_alive:
             gking.attack_gk(mage, stomp_inmove)
     move_g()
     
 def move_g():
-    if goblin.is_alive():
-        if hero.is_alive():
+    if goblin.is_alive:
+        if hero.is_alive:
             goblin.attack_g(hero)
-        elif mage.is_alive():
+        elif mage.is_alive:
             goblin.attack_g(mage)
-    if not hero.is_alive():
+    if not hero.is_alive:
         move_ma()
     else:
         move_h()
-    if not mage.is_alive():
+    if not mage.is_alive:
         move_h()
     else:
         move_ma()
 
 def move_h():
-    while hero.is_alive() and check_monst():
+    while hero.is_alive and check_monst():
         print('Currently selected: Hero')
         print('Choose one of the moves')
         print(f'---attack({hero.damage} DMG)---regen---change---')
@@ -278,7 +262,7 @@ def move_h():
                 else:
                     print('Max HP\n')
             case 'change':
-                if mage.is_alive():
+                if mage.is_alive:
                     print('')
                     move_ma()
                 else:
@@ -287,7 +271,7 @@ def move_h():
                 print('Error', end='\n')
 
 def move_ma():
-    while mage.is_alive() and check_monst():
+    while mage.is_alive and check_monst():
         print('Currently selected: Mage')
         print('Choose one of the moves')
         print('---attack---change---')
@@ -297,7 +281,7 @@ def move_ma():
                 print('') 
                 attack_choose(mage, True)
             case 'change':
-                if hero.is_alive():
+                if hero.is_alive:
                     print('')
                     move_h()
                 else:
@@ -308,9 +292,9 @@ def move_ma():
 def attack_choose(selector, allies_alive):
     while allies_alive and check_monst():
         print('Choose one of the enemies to attack')     #here
-        if goblin.is_alive():
+        if goblin.is_alive:
             print('--Goblin')
-        if gking.is_alive():
+        if gking.is_alive:
             print('--Goblin King')
         print('')
         x = input()
@@ -326,7 +310,7 @@ def attack_choose(selector, allies_alive):
         else:
             match x:
                 case 'Goblin':
-                    if goblin.is_alive():
+                    if goblin.is_alive:
                         hero.attack(goblin)
                         if y > 0 and y < 20:
                             move_gk(True)
@@ -335,7 +319,7 @@ def attack_choose(selector, allies_alive):
                     else:
                         print('Error\n')
                 case 'Goblin King':
-                    if gking.is_alive():
+                    if gking.is_alive:
                         hero.attack(gking)
                         if y > 0 and y < 20:
                             move_gk(True)
@@ -347,7 +331,7 @@ def attack_choose(selector, allies_alive):
                     print('Error\n')
 
 def spell_choose(enemy):
-    while mage.is_alive() and check_monst():
+    while mage.is_alive and check_monst():
         print('Choose one of the spells')
         print(f'---Fire Ball({mage.fire_ball} DMG)---Ice Spikes({mage.ice_spikes} DMG)---Wind Attack---({mage.wind_spell} DMG)                -Back')
         x = input()
@@ -366,9 +350,9 @@ def spell_choose(enemy):
             print('Error', end='\n')
 
 def check_monst():
-    if gking.is_alive():
+    if gking.is_alive:
         return True
-    elif goblin.is_alive():
+    elif goblin.is_alive:
         return True
     else:
         return False   
