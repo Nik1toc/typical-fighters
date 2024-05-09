@@ -22,9 +22,7 @@ class Character:
 class Monster(Character):
     """Monster class"""
 
-    def __init__(
-        self, name, clasif, weapon, damage, damage_sec, health, stomp, stomp_sec
-    ):
+    def __init__(self, name, clasif, weapon, damage, damage_sec, health, stomp, stomp_sec):
         self.damage_sec = damage_sec
         self.stomp_sec = stomp_sec
         self.clasif = clasif
@@ -61,10 +59,20 @@ class Monster(Character):
             return
 
         self._attack_regular(enemy)
+    
+    # def defense_check(self, enemy: Character) -> None:   
+    #     if isinstance(enemy, Hero) and not isinstance(enemy, Mage):
+    #         damage_dealt = max(0, self.damage - enemy.defense)
+    #     else:
+    #         damage_dealt = max(0, self.damage)
+    #     enemy.health -= damage_dealt
 
     def _attack_regular(self, enemy: Character) -> None:
         """Monster attacks with a regular attack"""
-        damage_dealt = max(0, self.damage - enemy.defense)
+        if isinstance(enemy, Hero) and not isinstance(enemy, Mage):
+            damage_dealt = max(0, self.damage - enemy.defense)
+        else:
+            damage_dealt = max(0, self.damage)
         enemy.health -= damage_dealt
         self._print_attack_info(enemy, damage_dealt)
 
@@ -76,13 +84,9 @@ class Monster(Character):
 
     def _print_attack_info(self, enemy: Character, damage_dealt: int) -> None:
         """Prints information about the attack"""
-        print(
-            f"{self.name} has attacked {enemy.__class__.__name__} {enemy.name} with {self.weapon}"
-        )
-        if damage_dealt == self.damage_sec or (
-            damage_dealt < self.damage_sec and damage_dealt != 0
-        ):
-            print(f"{enemy.name} HP reduced to {enemy.health}\n")
+        print(f"{self.name} has attacked {enemy.__class__.__name__} {enemy.name} with {self.weapon}")
+        if damage_dealt == self.damage_sec or (damage_dealt < self.damage_sec and damage_dealt != 0):
+            print(f"{enemy.name} HP reduced to {enemy.health} [{enemy.defense} Blocked]\n")
         else:
             print(f"{self.name} did no damage [Fully Blocked]\n")
 
@@ -94,9 +98,7 @@ class Monster(Character):
 class Hero(Character):
     """Main characer"""
 
-    def __init__(
-        self, name, clasif, weapon, damage, defense, health, regain, max_health
-    ):
+    def __init__(self, name, clasif, weapon, damage, defense, health, regain, max_health):
         self.clasif = clasif
         self.max_health = max_health
         self.name = name or "XXX"
@@ -130,9 +132,7 @@ class Hero(Character):
             monst.health -= self.damage
             if monst.health < 0:
                 monst.health = 0
-            print(
-                f"Hero {self.name} has attacked monster {monst.name} with {self.weapon}"
-            )
+            print(f"Hero {self.name} has attacked monster {monst.name} with {self.weapon}")
             print(f"{monst.name} HP reduced to {monst.health}\n")
             if monst.health <= 0:
                 monst.lose()
@@ -185,9 +185,7 @@ class Mage(Hero):
             monst.health -= self.spell_types.get(spell_type)  # Senior useful tricks
             if monst.health < 0:
                 monst.health = 0
-            print(
-                f"Mage {self.name} has attacked monster {monst.name} with {spell_type} spell"
-            )
+            print(f"Mage {self.name} has attacked monster {monst.name} with {spell_type} spell")
             print(f"{monst.name} HP reduced to {monst.health}\n")
             if monst.health <= 0:
                 monst.lose()
@@ -219,9 +217,9 @@ hero = Hero(
     weapon="Holy Sword",
     damage=26,
     defense=50,
-    health=100,
+    health=30,         #100
     regain=30,
-    max_health=100,
+    max_health=30,      #100
 )
 mage = Mage(
     name="Ronate",
